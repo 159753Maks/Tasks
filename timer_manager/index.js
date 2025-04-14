@@ -87,7 +87,24 @@ class TimersManager {
             console.error('Invalid timer name. Name must be a string.');
         }
     }
-    start() { }
+    start() {
+        // Loop through the timers and start them
+        this.timers.forEach(
+            (timer) => {
+                // Check if the timer is a timeout or an interval
+                if (timer.interval) {
+                    timer.index = setInterval(() => { // Start the timer
+                        timer.job(...timer.args); // Execute the job with the arguments
+                    }, timer.delay);
+                } else {
+                    timer.index = setTimeout(() => { // Start the timer
+                        timer.job(...timer.args); // Execute the job with the arguments       
+                    }, timer.delay);
+                }
+                console.log(`Timer ${timer.name} started.`);
+            }
+        )
+    }
     stop() { }
     pause() { }
     resume() { }
@@ -110,7 +127,8 @@ const t2 = {
 
 manager.add(t1);
 manager.add(t2, 1, 2);
-manager.remove('t1');
+//manager.remove('t1');
+manager.start();
 //manager.start();
 //console.log(1);
 //manager.pause('t1');
