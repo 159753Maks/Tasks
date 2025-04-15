@@ -180,6 +180,51 @@ class TimersManager {
             console.error('Invalid timer name. Name must be a string.');
         }
     }
+
+    log(timer, result) {
+        // Check if the timer is valid
+        if (timer) {
+            // Check if the timer has a name property
+            if (typeof timer.name === 'string') {
+                if (timer.name.trim() !== '') {
+                    // Create a log entry object with the timer name, arguments, result, and created date
+                    const logEntry = {
+                        name: timer.name,
+                        in: timer.args || [],
+                        out: result,
+                        created: new Date()
+                    };
+                    // Add the log entry to the timer's logs
+                    timer.logs.push(logEntry);
+                    console.log(`Log added for timer ${timer.name}.`);
+                } else {
+                    console.error('Invalid timer name in log. Name cannot be empty.');
+                }
+            } else {
+                console.error('Invalid timer name in log. Name must be a string.');
+            }
+        } else {
+            console.error('Invalid timer in log. Timer must be an object.');
+        }
+    }
+
+    print() {
+        // Create an array to store all logs
+        const allLogs = [];
+        // Loop through the timers and collect their logs
+        this.timers.forEach((timer) => {
+            // Check if the timer has logs
+            if (timer.logs && Array.isArray(timer.logs)) {
+                // Add all logs from the timer to the result array
+                timer.logs.forEach((log) => {
+                    allLogs.push(log);
+                });
+            } else {
+                console.log(`Timer ${timer.name} has no logs.`);
+            }
+        });
+        return allLogs;
+    }
 }
 const manager = new TimersManager();
 
@@ -199,11 +244,8 @@ const t2 = {
 
 manager.add(t1);
 manager.add(t2, 1, 2);
-//manager.remove('t1');
 manager.start();
 manager.pause('t1');
 manager.resume('t1');
 manager.stop();
-//manager.start();
-//console.log(1);
-//manager.pause('t1');
+manager.print();
