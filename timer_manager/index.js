@@ -105,7 +105,21 @@ class TimersManager {
             }
         )
     }
-    stop() { }
+    stop() {
+        // Loop through the timers and stop them
+        this.timers.forEach(
+            (timer) => {
+                // Check if the timer is a timeout or an interval
+                if (timer.interval) {
+                    clearInterval(timer.index); // Stop the timer
+                } else {
+                    clearTimeout(timer.index); // Stop the timer
+                }
+                console.log(`Timer ${timer.name} stopped.`);
+            }
+        )
+    }
+
     pause() { }
     resume() { }
 }
@@ -129,6 +143,7 @@ manager.add(t1);
 manager.add(t2, 1, 2);
 //manager.remove('t1');
 manager.start();
+manager.stop();
 //manager.start();
 //console.log(1);
 //manager.pause('t1');
