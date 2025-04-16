@@ -89,21 +89,29 @@ class TimersManager {
     }
     start() {
         // Loop through the timers and start them
-        this.timers.forEach(
-            (timer) => {
-                // Check if the timer is a timeout or an interval
-                if (timer.interval) {
-                    timer.index = setInterval(() => { // Start the timer
-                        timer.job(...timer.args); // Execute the job with the arguments
-                    }, timer.delay);
-                } else {
-                    timer.index = setTimeout(() => { // Start the timer
-                        timer.job(...timer.args); // Execute the job with the arguments       
-                    }, timer.delay);
-                }
-                console.log(`Timer ${timer.name} started.`);
+        this.timers.forEach((timer) => {
+            // Check if the timer is a timeout or an interval
+            if (timer.interval) {
+                timer.index = setInterval(() => {
+                    try {
+                        const result = timer.job(...timer.args); // Execute the job with the arguments
+                        this.log(timer, result); // Log the result
+                    } catch (error) {
+                        this.log(timer, undefined, error); // Log the error
+                    }
+                }, timer.delay);
+            } else {
+                timer.index = setTimeout(() => {
+                    try {
+                        const result = timer.job(...timer.args); // Execute the job with the arguments
+                        this.log(timer, result); // Log the result
+                    } catch (error) {
+                        this.log(timer, undefined, error); // Log the error
+                    }
+                }, timer.delay);
             }
-        )
+            console.log(`Timer ${timer.name} started.`);
+        });
     }
     stop() {
         // Loop through the timers and stop them
@@ -181,27 +189,34 @@ class TimersManager {
         }
     }
 
-    log(timer, result) {
+    log(timer, result, error = null) {
         // Check if the timer is valid
         if (timer) {
             // Check if the timer has a name property
-            if (typeof timer.name === 'string') {
-                if (timer.name.trim() !== '') {
-                    // Create a log entry object with the timer name, arguments, result, and created date
-                    const logEntry = {
-                        name: timer.name,
-                        in: timer.args || [],
-                        out: result,
-                        created: new Date()
-                    };
-                    // Add the log entry to the timer's logs
-                    timer.logs.push(logEntry);
-                    console.log(`Log added for timer ${timer.name}.`);
-                } else {
-                    console.error('Invalid timer name in log. Name cannot be empty.');
+            if (typeof timer.name === 'string' && timer.name.trim() !== '') {
+                // Create a log entry object with the timer name, arguments, result, error, and created date
+                const logEntry = {
+                    name: timer.name,
+                    in: timer.args || [],
+                    out: result,
+                    error: error
+                        ? {
+                              name: error.name,
+                              message: error.message,
+                              stack: error.stack,
+                          }
+                        : undefined,
+                    created: new Date(),
+                };
+                // Initialize logs array if it doesn't exist
+                if (!timer.logs) {
+                    timer.logs = [];
                 }
+                // Add the log entry to the timer's logs
+                timer.logs.push(logEntry);
+                console.log(`Log added for timer ${timer.name}.`);
             } else {
-                console.error('Invalid timer name in log. Name must be a string.');
+                console.error('Invalid timer name in log. Name cannot be empty.');
             }
         } else {
             console.error('Invalid timer in log. Timer must be an object.');
