@@ -2,69 +2,53 @@ class TimersManager {
     constructor() {
         this.timers = [];
     }
+    // Method to add a timeout
+    setGlobalTimeout() {
+        // find the maximum delay from all timers
+        const maxDelay = this.timers.reduce((max, timer) => Math.max(max, timer.delay), 0);
+        const timeoutDuration = maxDelay + 10000; // 10 seconds more than the maximum delay
+
+        // Check if a global timeout already exists
+        this.globalTimeout = setTimeout(() => {
+            console.log('Global timeout reached. Stopping all timers.');
+            this.stop(); // Stop all timers
+        }, timeoutDuration);
+
+        console.log(`Global timeout set for ${timeoutDuration / 1000} seconds.`);
+    }
 
     // Method to add a timer
     add(timer, ...args) {
-        // Check if the timer object is valid
-        if (timer) {
-            // Check if the timer object has a name property, name is correct type and is not empty
-            if (typeof timer.name === 'string') {
-                if (timer.name.trim() !== '') {
-                    console.log(`Timer ${timer.name} added.`);
+        if (timer) { // Check if the timer is an object
+            if (typeof timer.name === 'string' && timer.name.trim() !== '') { // Check if the timer name is a non-empty string
+                if (typeof timer.job === 'function') { // Check if the timer job is a function
+                    if (typeof timer.delay === 'number' && timer.delay >= 0 && timer.delay <= 5000) { // Check if the timer delay is a number between 0 and 5000
+                        if (typeof timer.interval === 'boolean') {  // Check if the timer interval is a boolean
+                            this.timers.push({ // Add the timer to the list
+                                ...timer,
+                                args: args,
+                                index: null,
+                            });
+                            console.log(`Timer ${timer.name} added to the manager.`);
+                            this.setGlobalTimeout(); // Set the global timeout
+                        } else {
+                            console.error('Invalid timer interval. Interval must be a boolean.');
+                        }
+                    } else {
+                        console.error('Invalid timer delay. Delay must be greater than 0 and less than 5000.');
+                    }
                 } else {
-                    console.error('Invalid timer name. Name cannot be empty.');
-                    return;
+                    console.error('Invalid timer job. Job must be a function.');
                 }
             } else {
-                console.error('Invalid timer name. Name must be a string.');
-                return;
+                console.error('Invalid timer name. Name must be a non-empty string.');
             }
-
-            // check if the timer has a job property
-            if (typeof timer.job === 'function') {
-                console.log(`Timer ${timer.name} job is ${timer.job}.`);
-            } else {
-                console.error('Invalid timer job. Job must be a function.');
-                return;
-            }
-
-            // check if the timer has a correct delay property
-            if (typeof timer.delay === 'number') {
-                if (timer.delay < 0 || timer.delay > 5000) {
-                    console.error('Invalid timer delay. Delay must be greater than 0 and less than 5000.');
-                    return;
-                } else {
-                    console.log(`Timer ${timer.name} delay is ${timer.delay}.`);
-                }
-            } else {
-                console.error('Invalid timer delay. Delay must be a number.');
-                return;
-            }
-
-            // check is timer or is interval
-            if (typeof timer.interval === 'boolean') {
-                if (timer.interval) {
-                    console.log(`Timer ${timer.name} is an interval.`);
-                } else {
-                    console.log(`Timer ${timer.name} is a timeout.`);
-                }
-            } else {
-                console.error('Invalid timer interval. Interval must be a boolean.');
-                return;
-            }
-
-            this.timers.push({
-                ...timer,
-                args: args, // Save arguments for later use in start
-                index: null // Placeholder for timer index
-            });
-            console.log(`Timer ${timer.name} added to the manager.`);
         } else {
             console.error('Invalid timer. Timer must be an object.');
-            return;
         }
-
     }
+
+    // Method to remove a timer
     remove(name) {
         // Check if the timer name is valid
         if (name && typeof name === 'string') {
@@ -87,45 +71,49 @@ class TimersManager {
             console.error('Invalid timer name. Name must be a string.');
         }
     }
+
+    // Method to start all timers
     start() {
-        // Loop through the timers and start them
-        this.timers.forEach((timer) => {
-            // Check if the timer is a timeout or an interval
-            if (timer.interval) {
-                timer.index = setInterval(() => {
-                    try {
+        this.timers.forEach((timer) => { // Loop through the timers
+            if (timer.interval) { // Check if the timer is an interval
+                timer.index = setInterval(() => { // Start the timer
+                    try { // Try to execute the job
                         const result = timer.job(...timer.args); // Execute the job with the arguments
-                        this.log(timer, result); // Log the result
-                    } catch (error) {
-                        this.log(timer, undefined, error); // Log the error
+                        this.log(timer, result);
+                    } catch (error) { // Catch any errors
+                        this.log(timer, undefined, error);
                     }
-                }, timer.delay);
-            } else {
-                timer.index = setTimeout(() => {
-                    try {
+                }, timer.delay); // Set the interval
+            } else {  // If the timer is a timeout
+                timer.index = setTimeout(() => { // Start the timer
+                    try { // Try to execute the job
                         const result = timer.job(...timer.args); // Execute the job with the arguments
-                        this.log(timer, result); // Log the result
-                    } catch (error) {
-                        this.log(timer, undefined, error); // Log the error
+                        this.log(timer, result);
+                    } catch (error) { // Catch any errors
+                        this.log(timer, undefined, error);
                     }
-                }, timer.delay);
+                }, timer.delay); // Set the timeout
             }
             console.log(`Timer ${timer.name} started.`);
         });
     }
+
+    // Method to stop all timers
     stop() {
-        // Loop through the timers and stop them
-        this.timers.forEach(
-            (timer) => {
-                // Check if the timer is a timeout or an interval
-                if (timer.interval) {
-                    clearInterval(timer.index); // Stop the timer
-                } else {
-                    clearTimeout(timer.index); // Stop the timer
-                }
-                console.log(`Timer ${timer.name} stopped.`);
+        this.timers.forEach((timer) => { // Loop through the timers
+            if (timer.interval) { // Check if the timer is an interval
+                clearInterval(timer.index); // Stop the timer
+            } else { // If the timer is a timeout
+                clearTimeout(timer.index); // Stop the timer
             }
-        )
+            console.log(`Timer ${timer.name} stopped.`);
+        });
+
+        // Clear the timers array
+        if (this.globalTimeout) {
+            clearTimeout(this.globalTimeout);
+            this.globalTimeout = null;
+        }
     }
 
     pause(name) {
@@ -201,10 +189,10 @@ class TimersManager {
                     out: result,
                     error: error
                         ? {
-                              name: error.name,
-                              message: error.message,
-                              stack: error.stack,
-                          }
+                            name: error.name,
+                            message: error.message,
+                            stack: error.stack,
+                        }
                         : undefined,
                     created: new Date(),
                 };
