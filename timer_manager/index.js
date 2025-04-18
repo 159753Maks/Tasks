@@ -19,56 +19,64 @@ class TimersManager {
 
     // Method to add a timer
     add(timer, ...args) {
-        if (timer) { // Check if the timer is an object
-            if (typeof timer.name === 'string' && timer.name.trim() !== '') { // Check if the timer name is a non-empty string
-                if (typeof timer.job === 'function') { // Check if the timer job is a function
-                    if (typeof timer.delay === 'number' && timer.delay >= 0 && timer.delay <= 5000) { // Check if the timer delay is a number between 0 and 5000
-                        if (typeof timer.interval === 'boolean') {  // Check if the timer interval is a boolean
-                            this.timers.push({ // Add the timer to the list
-                                ...timer,
-                                args: args,
-                                index: null,
-                            });
-                            console.log(`Timer ${timer.name} added to the manager.`);
-                            this.setGlobalTimeout(); // Set the global timeout
-                        } else {
-                            console.error('Invalid timer interval. Interval must be a boolean.');
-                        }
-                    } else {
-                        console.error('Invalid timer delay. Delay must be greater than 0 and less than 5000.');
-                    }
-                } else {
-                    console.error('Invalid timer job. Job must be a function.');
-                }
-            } else {
-                console.error('Invalid timer name. Name must be a non-empty string.');
-            }
-        } else {
+        // Check if the timer is an object
+        if (!timer) {
             console.error('Invalid timer. Timer must be an object.');
+            return this; // Return the instance for method chaining
         }
+
+        // Check if the timer name is a non-empty string
+        if (typeof timer.name !== 'string' || timer.name.trim() === '') {
+            console.error('Invalid timer name. Name must be a non-empty string.');
+            return this; // Return the instance for method chaining
+        }
+
+        // Check if the timer job is a function
+        if (typeof timer.job !== 'function') {
+            console.error('Invalid timer job. Job must be a function.');
+            return this; // Return the instance for method chaining
+        }
+
+        // Check if the timer delay is a number between 0 and 5000
+        if (typeof timer.delay !== 'number' || timer.delay < 0 || timer.delay > 5000) {
+            console.error('Invalid timer delay. Delay must be a number between 0 and 5000 milliseconds.');
+            return this; // Return the instance for method chaining
+        }
+
+        // Check if the timer interval is a boolean
+        if (typeof timer.interval !== 'boolean') {
+            console.error('Invalid timer interval. Interval must be a boolean.');
+            return this; // Return the instance for method chaining
+        }
+
+        // Add the timer to the list
+        this.timers.push({
+            ...timer, // Spread the timer object
+            args, // Add the arguments to the timer object
+            index: null, // Initialize the index to null
+        });
+        console.log('Timer ${timer.name} added to the manager.');
+        this.setGlobalTimeout(); // Set the global timeout
+
+        return this; // Return the instance for method chaining
     }
 
     // Method to remove a timer
     remove(name) {
         // Check if the timer name is valid
-        if (name && typeof name === 'string') {
-            // Check if the timer name is not empty
-            if (name.trim() !== '') {
-                const index = this.timers.findIndex(timer => timer.name === name);
-                // Check if the timer exists in the list
-                // If it exists, remove it from the list
-                if (index !== -1) {
-                    const timer = this.timers[index];
-                    console.log(`Timer ${timer.name} removed.`);
-                    this.timers.splice(index, 1);
-                } else {
-                    console.error(`Timer ${name} not found.`);
-                }
-            } else {
-                console.error('Invalid timer name. Name cannot be empty.');
-            }
+        if (typeof name !== 'string' || name.trim() === '') {
+            console.error('Invalid timer name. Name must be a non-empty string.');
+            return;
+        }
+
+        const index = this.timers.findIndex(timer => timer.name === name); // Find the index of the timer with the given name
+
+        if (index !== -1) {
+            const timer = this.timers[index];
+            console.log(`Timer ${timer.name} removed.`);
+            this.timers.splice(index, 1); // Remove the timer from the list
         } else {
-            console.error('Invalid timer name. Name must be a string.');
+            console.error(`Timer ${name} not found.`);
         }
     }
 
@@ -110,70 +118,56 @@ class TimersManager {
         });
 
         // Clear the timers array
-        if (this.globalTimeout) {
-            clearTimeout(this.globalTimeout);
-            this.globalTimeout = null;
+        if (this.globalTimeout) { // Check if a global timeout exists
+            clearTimeout(this.globalTimeout); // Stop the global timeout
+            this.globalTimeout = null; // Reset the global timeout
         }
     }
 
     pause(name) {
         // Check if the timer name is valid
-        if (name && typeof name === 'string') {
-            // Check if the timer name is not empty
-            if (name.trim() !== '') {
-                const index = this.timers.findIndex(timer => timer.name === name);
-                // Check if the timer exists in the list
-                // If it exists, pause it
-                if (index !== -1) {
-                    const timer = this.timers[index];
-                    // Check if the timer is a timeout or an interval
-                    if (timer.interval) {
-                        clearInterval(timer.index); // Pause the timer
-                    } else {
-                        clearTimeout(timer.index); // Pause the timer
-                    }
-                    console.log(`Timer ${timer.name} paused.`);
-                }
-                else {
-                    console.error(`Timer ${name} not found.`);
-                }
+        if (typeof name === 'string' && name.trim() !== '') {
+            console.error('Invalid timer name. Name must be a non-empty string.');
+            return;
+        }
+
+        const index = this.timers.findIndex(timer => timer.name === name); // Find the index of the timer with the given name
+        if (index !== -1) {
+            const timer = this.timers[index];
+            if (timer.interval) {
+                clearInterval(timer.index);
             } else {
-                console.error('Invalid timer name. Name cannot be empty.');
+                clearTimeout(timer.index);
             }
+            console.log(`Timer ${timer.name} paused.`);
         } else {
-            console.error('Invalid timer name. Name must be a string.');
+            console.error(`Timer ${name} not found.`);
         }
     }
 
     resume(name) {
         // Check if the timer name is valid
-        if (name && typeof name === 'string') {
-            // Check if the timer name is not empty
-            if (name.trim() !== '') {
-                const index = this.timers.findIndex(timer => timer.name === name);
-                // Check if the timer exists in the list
-                // If it exists, resume it
-                if (index !== -1) {
-                    const timer = this.timers[index];
-                    // Check if the timer is a timeout or an interval
-                    if (timer.interval) {
-                        timer.index = setInterval(() => { // Start the timer
-                            timer.job(...timer.args); // Execute the job with the arguments
-                        }, timer.delay);
-                    } else {
-                        timer.index = setTimeout(() => { // Start the timer
-                            timer.job(...timer.args); // Execute the job with the arguments
-                        }, timer.delay);
-                    }
-                    console.log(`Timer ${timer.name} resumed.`);
-                } else {
-                    console.error(`Timer ${name} not found.`);
-                }
-            } else {
-                console.error('Invalid timer name. Name cannot be empty.');
+        if (typeof name !== 'string' || name.trim() === '') {
+            console.error('Invalid timer name. Name must be a non-empty string.');
+            return;
+        }
+
+        const index = this.timers.findIndex(timer => timer.name === name); // Find the index of the timer with the given name
+
+        if (index !== -1) { // Check if the timer exists in the list
+            const timer = this.timers[index]; // Get the timer object
+            if (timer.interval) { // Check if the timer is an interval
+                timer.index = setInterval(() => { // Start the timer
+                    timer.job(...timer.args); // Execute the job with the arguments
+                }, timer.delay); // Set the interval
+            } else { // If the timer is a timeout
+                timer.index = setTimeout(() => {
+                    timer.job(...timer.args);
+                }, timer.delay);
             }
+            console.log(`Timer ${timer.name} resumed.`);
         } else {
-            console.error('Invalid timer name. Name must be a string.');
+            console.error(`Timer ${name} not found.`);
         }
     }
 
@@ -245,8 +239,9 @@ const t2 = {
     job: (a, b) => a + b
 };
 
-manager.add(t1);
-manager.add(t2, 1, 2);
+// manager.add(t1);
+// manager.add(t2, 1, 2);
+manager.add(t1).add(t2, 1, 2);
 manager.start();
 manager.pause('t1');
 manager.resume('t1');
