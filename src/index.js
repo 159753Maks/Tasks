@@ -172,37 +172,27 @@ class TimersManager {
     }
 
     log(timer, result, error = null) {
-        // Check if the timer is valid
-        if (timer) {
-            // Check if the timer has a name property
-            if (typeof timer.name === 'string' && timer.name.trim() !== '') {
-                // Create a log entry object with the timer name, arguments, result, error, and created date
-                const logEntry = {
-                    name: timer.name,
-                    in: timer.args || [],
-                    out: result,
-                    error: error
-                        ? {
-                            name: error.name,
-                            message: error.message,
-                            stack: error.stack,
-                        }
-                        : undefined,
-                    created: new Date(),
-                };
-                // Initialize logs array if it doesn't exist
-                if (!timer.logs) {
-                    timer.logs = [];
+        // Create a log entry object with the timer name, arguments, result, error, and created date
+        const logEntry = {
+            name: timer.name,
+            in: timer.args || [],
+            out: result,
+            error: error
+                ? {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack,
                 }
-                // Add the log entry to the timer's logs
-                timer.logs.push(logEntry);
-                console.log(`Log added for timer ${timer.name}.`);
-            } else {
-                console.error('Invalid timer name in log. Name cannot be empty.');
-            }
-        } else {
-            console.error('Invalid timer in log. Timer must be an object.');
+                : undefined,
+            created: new Date(),
+        };
+        // Initialize logs array if it doesn't exist
+        if (!timer.logs) {
+            timer.logs = [];
         }
+        // Add the log entry to the timer's logs
+        timer.logs.push(logEntry);
+        console.log(`Log added for timer ${timer.name}.`);
     }
 
     print() {
