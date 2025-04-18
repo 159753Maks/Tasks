@@ -55,7 +55,7 @@ class TimersManager {
             args, // Add the arguments to the timer object
             index: null, // Initialize the index to null
         });
-        console.log('Timer ${timer.name} added to the manager.');
+        console.log(`Timer ${timer.name} added to the manager.`);
         this.setGlobalTimeout(); // Set the global timeout
 
         return this; // Return the instance for method chaining
